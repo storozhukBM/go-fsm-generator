@@ -2,7 +2,7 @@ package examples
 
 import "fmt"
 
-//go:generate ../fsmgenerator -type CBMDeclaration
+//go:generate ../go-fsm-generator -type CBMDeclaration
 
 type FSMState int
 
