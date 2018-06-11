@@ -1,3 +1,5 @@
+[<img src="https://travis-ci.org/storozhukBM/go-fsm-generator.svg?branch=master">](https://travis-ci.org/storozhukBM/go-fsm-generator)
+
 # Code generator for state machines
 
 `fsmgenerator` can be used to generate code to state machine.
