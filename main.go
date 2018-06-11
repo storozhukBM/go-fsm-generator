@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"fmt"
 	"go/format"
+	"sort"
 )
 
 const declarationTag = "Declaration"
@@ -125,7 +126,8 @@ func describeGeneratedMachine(definition MachineDefinition) string {
 	builder.WriteString(definition.MachineName)
 	builder.WriteString(" {\n")
 
-	for state, stateDef := range definition.States {
+	for _, state := range sortedStates(definition.States) {
+		stateDef := definition.States[state]
 		if stateDef.IsTerminal {
 			builder.WriteString("	")
 			builder.WriteString(string(state))
@@ -133,7 +135,8 @@ func describeGeneratedMachine(definition MachineDefinition) string {
 			continue
 		}
 
-		for ev, dst := range stateDef.Events {
+		for _, ev := range sortedEvents(stateDef.Events) {
+			dst := stateDef.Events[ev]
 			builder.WriteString("	")
 			builder.WriteString(string(state))
 			builder.WriteString(" -> ")
@@ -246,4 +249,26 @@ func scan(
 			}
 		}
 	}
+}
+
+func sortedStates(m map[State]StateDefinition) []State {
+	var result []State
+	for key := range m {
+		result = append(result, key)
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return string(result[i]) < string(result[j])
+	})
+	return result
+}
+
+func sortedEvents(m map[Event]State) []Event {
+	var result []Event
+	for key := range m {
+		result = append(result, key)
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return string(result[i]) < string(result[j])
+	})
+	return result
 }

@@ -78,12 +78,12 @@ func (m *CBM) Operate(operator CBMBehaviour) {
 func (m *CBM) Visualize() string {
 	return `// Definition for CBM in Graphviz format 
 digraph CBM {
-	Opened -> HalfOpened [label=Try];
-	HalfOpened -> Closed [label=Success];
-	HalfOpened -> Opened [label=Failure];
-	Closed -> Terminal [label=Panic];
 	Closed -> Terminal [label=Error];
 	Closed -> Opened [label=Failure];
+	Closed -> Terminal [label=Panic];
+	HalfOpened -> Opened [label=Failure];
+	HalfOpened -> Closed [label=Success];
+	Opened -> HalfOpened [label=Try];
 	Terminal [shape=Msquare];
 }
 `
