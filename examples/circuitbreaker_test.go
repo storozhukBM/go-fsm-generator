@@ -1,6 +1,8 @@
 package examples
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestCircuitBreaker(t *testing.T) {
 	cbm, err := NewCBMFromString("Opened")

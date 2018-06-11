@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"path/filepath"
 	"io/ioutil"
+	"fmt"
 	"go/format"
 )
 
@@ -27,13 +28,16 @@ type StateDefinition struct {
 }
 
 type MachineDefinition struct {
+	DirName     string
 	PkgName     string
 	MachineName string
 	States      map[State]StateDefinition
+	Description string
 	Struct      *ast.StructType
 }
 
 func main() {
+	verbose := flag.Bool("v", false, "verbose output from generator")
 	typeNames := flag.String("type", "", "comma-separated list of type names; must be set")
 	var dirName string
 	flag.StringVar(&dirName, "dir", ".", "working directory; must be set")
@@ -53,21 +57,14 @@ func main() {
 	if err != nil {
 		log.Fatal("can't parse destination dir ", err)
 	}
+	scan(pkgs, types, func(pkg *ast.Package, foundType string, obj *ast.Object) {
 
-	for _, pkg := range pkgs {
-		for _, file := range pkg.Files {
-			for _, t := range types {
-				obj := file.Scope.Lookup(t)
-				if obj == nil {
-					continue
-				}
-				generateStm(strings.TrimSuffix(t, declarationTag), dirName, pkg.Name, fset, obj)
-			}
-		}
-	}
+		machineName := strings.TrimSuffix(foundType, declarationTag)
+		generateStm(*verbose, machineName, dirName, pkg.Name, fset, obj)
+	})
 }
 
-func generateStm(machineName string, dirName string, pkgName string, fset *token.FileSet, obj *ast.Object) {
+func generateStm(verbose bool, machineName string, dirName string, pkgName string, fset *token.FileSet, obj *ast.Object) {
 	structType := extractStructTypeFromDefinition(fset, obj)
 	states := map[State]StateDefinition{}
 	for _, field := range structType.Fields.List {
@@ -81,16 +78,21 @@ func generateStm(machineName string, dirName string, pkgName string, fset *token
 		states[st.Name] = st
 	}
 	definition := MachineDefinition{
+		DirName:     dirName,
 		PkgName:     pkgName,
 		MachineName: machineName,
 		States:      states,
 		Struct:      structType,
 	}
 	verifyDefinition(fset, definition)
-	generateFromTemplateAndWriteToFile(definition, machineName, dirName)
+	definition.Description = describeGeneratedMachine(definition)
+	generateFromTemplateAndWriteToFile(definition)
+	if verbose {
+		fmt.Println(strip(definition.Description))
+	}
 }
 
-func generateFromTemplateAndWriteToFile(definition MachineDefinition, machineName string, dirName string) {
+func generateFromTemplateAndWriteToFile(definition MachineDefinition) {
 	var b bytes.Buffer
 	err := embeddedTemplate.Execute(&b, definition)
 	if err != nil {
@@ -100,10 +102,10 @@ func generateFromTemplateAndWriteToFile(definition MachineDefinition, machineNam
 	if err != nil {
 		log.Fatal("can't format generated template ", err)
 	}
-	output := strings.ToLower(machineName + ".fsm.go")
-	absPath, err := filepath.Abs("")
+	output := strings.ToLower(definition.MachineName + ".fsm.go")
+	absPath, err := filepath.Abs("") //TODO: investigate this
 	if err != nil {
-		log.Fatal("can't calculate abs path for: "+dirName, err)
+		log.Fatal("can't calculate abs path for: "+definition.DirName, err)
 	}
 	outputPath := filepath.Join(absPath, output)
 	log.Print(outputPath)
@@ -111,6 +113,38 @@ func generateFromTemplateAndWriteToFile(definition MachineDefinition, machineNam
 	if err != nil {
 		log.Fatal("can't write file to disk. ", err)
 	}
+}
+func describeGeneratedMachine(definition MachineDefinition) string {
+	builder := &strings.Builder{}
+
+	builder.WriteString("`// Definition for ")
+	builder.WriteString(definition.MachineName)
+	builder.WriteString(" in Graphviz format \n")
+	builder.WriteString("digraph ")
+	builder.WriteString(definition.MachineName)
+	builder.WriteString(" {\n")
+
+	for state, stateDef := range definition.States {
+		if stateDef.IsTerminal {
+			builder.WriteString("	")
+			builder.WriteString(string(state))
+			builder.WriteString(" [shape=Msquare];\n")
+			continue
+		}
+
+		for ev, dst := range stateDef.Events {
+			builder.WriteString("	")
+			builder.WriteString(string(state))
+			builder.WriteString(" -> ")
+			builder.WriteString(string(dst))
+			builder.WriteString(" [label=")
+			builder.WriteString(string(ev))
+			builder.WriteString("];\n")
+		}
+	}
+	builder.WriteString("}\n`")
+
+	return builder.String()
 }
 
 func parseStateMachineEventsAndDestinations(st StateDefinition, fset *token.FileSet, tag *ast.BasicLit) (map[Event]State, map[State][]Event) {
@@ -148,6 +182,7 @@ func verifySpecifiedTypes(types []string) {
 		}
 	}
 }
+
 func verifyDefinition(fset *token.FileSet, definition MachineDefinition) {
 	for _, st := range definition.States {
 		for dst, events := range st.Destinations {
@@ -161,7 +196,6 @@ func verifyDefinition(fset *token.FileSet, definition MachineDefinition) {
 		}
 	}
 }
-
 func verifyField(fset *token.FileSet, field *ast.Field) {
 	typeID, ok := field.Type.(*ast.Ident)
 	if !ok || typeID.Name != "FSMState" {
@@ -192,4 +226,22 @@ func extractStructTypeFromDefinition(fset *token.FileSet, obj *ast.Object) *ast.
 
 func strip(s string) string {
 	return s[1 : len(s)-1]
+}
+
+func scan(
+	packages map[string]*ast.Package,
+	lookingForTypes []string,
+	apply func(pkg *ast.Package, foundType string, obj *ast.Object),
+) {
+	for _, pkg := range packages {
+		for _, file := range pkg.Files {
+			for _, t := range lookingForTypes {
+				obj := file.Scope.Lookup(t)
+				if obj == nil {
+					continue
+				}
+				apply(pkg, t, obj)
+			}
+		}
+	}
 }

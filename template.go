@@ -82,21 +82,8 @@ var embeddedTemplate = template.Must(template.New("embedded").Parse(`
 	}
 
 	func (m *{{$mName}}) Visualize() string {
-		return "//Graphviz format \n" +
-				"digraph {{$mName}}{\n" +
-				{{- range $st, $stDef := .States}}
-				{{- if ($stDef.IsTerminal)}}
-					"{{$st}} [shape=Msquare];\n" +
-				{{- else}}
-					{{- range $ev, $dst := $stDef.Events}}
-					"{{$st}} -> {{$dst}} [label={{$ev}}];\n" +
-					{{- end}}
-				{{- end}}
-				{{- end}}
-				"}\n"
+		return {{.Description}}
 	}
-
-	
 
 	// Handlers for state transitions
 	{{range $st, $stDef := .States}}

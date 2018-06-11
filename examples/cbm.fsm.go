@@ -76,16 +76,17 @@ func (m *CBM) Operate(operator CBMBehaviour) {
 }
 
 func (m *CBM) Visualize() string {
-	return "//Graphviz format \n" +
-		"digraph CBM{\n" +
-		"Closed -> Terminal [label=Error];\n" +
-		"Closed -> Opened [label=Failure];\n" +
-		"Closed -> Terminal [label=Panic];\n" +
-		"HalfOpened -> Opened [label=Failure];\n" +
-		"HalfOpened -> Closed [label=Success];\n" +
-		"Opened -> HalfOpened [label=Try];\n" +
-		"Terminal [shape=Msquare];\n" +
-		"}\n"
+	return `// Definition for CBM in Graphviz format 
+digraph CBM {
+	Opened -> HalfOpened [label=Try];
+	HalfOpened -> Closed [label=Success];
+	HalfOpened -> Opened [label=Failure];
+	Closed -> Terminal [label=Panic];
+	Closed -> Terminal [label=Error];
+	Closed -> Opened [label=Failure];
+	Terminal [shape=Msquare];
+}
+`
 }
 
 // Handlers for state transitions
