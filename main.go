@@ -114,6 +114,7 @@ func generateFromTemplateAndWriteToFile(definition MachineDefinition) {
 		log.Fatal("can't write file to disk. ", err)
 	}
 }
+
 func describeGeneratedMachine(definition MachineDefinition) string {
 	builder := &strings.Builder{}
 
@@ -196,6 +197,7 @@ func verifyDefinition(fset *token.FileSet, definition MachineDefinition) {
 		}
 	}
 }
+
 func verifyField(fset *token.FileSet, field *ast.Field) {
 	typeID, ok := field.Type.(*ast.Ident)
 	if !ok || typeID.Name != "FSMState" {
