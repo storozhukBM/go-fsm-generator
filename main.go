@@ -104,7 +104,7 @@ func generateFromTemplateAndWriteToFile(definition MachineDefinition) {
 		log.Fatal("can't format generated template ", err)
 	}
 	output := strings.ToLower(definition.MachineName + ".fsm.go")
-	absPath, err := filepath.Abs("") //TODO: investigate this
+	absPath, err := filepath.Abs(definition.DirName)
 	if err != nil {
 		log.Fatal("can't calculate abs path for: "+definition.DirName, err)
 	}
