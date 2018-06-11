@@ -14,7 +14,7 @@ type CBMDeclaration struct {
 }
 
 type CircuitBreaker struct {
-	fsm CBM
+	fsm *CBM
 }
 
 func (m *CircuitBreaker) OperateClosed() CBMClosedEvent {
@@ -27,5 +27,5 @@ func (m *CircuitBreaker) OperateHalfOpened() CBMHalfOpenedEvent {
 }
 
 func (m *CircuitBreaker) OperateOpened() CBMOpenedEvent {
-	return OpenedNoop
+	return OpenedTry
 }
