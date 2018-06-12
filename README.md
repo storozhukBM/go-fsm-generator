@@ -30,6 +30,7 @@ type CBMDeclaration struct {
 ```
 
 As an result we will get flowing FSM
+
 ![Circuit Breaker FSM visualization](examples/cbm.svg)
 
 
