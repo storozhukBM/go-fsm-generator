@@ -10,7 +10,30 @@
 - Visualize your FSM in generation time and in runtime using Graphwiz notation [`dot`].
 - Created with `go generate` in mind.
 
-Use examples folder as reference.
+# Example
+As an demonstration we have implemented circuit breaker state machine in `examples` folder.
+
+We use simple struct fields to declare FSM states 
+and field tags to define state transitions.
+
+```go
+//go:generate ../go-fsm-generator -type CBMDeclaration -v
+
+type FSMState int
+
+type CBMDeclaration struct {
+	Opened     FSMState `Try:"HalfOpened"`
+	HalfOpened FSMState `Success:"Closed",Failure:"Opened",Panic:"Exit"`
+	Closed     FSMState `Error:"Opened",Panic:"Exit"`
+	Exit       FSMState
+}
+```
+
+As an result we will get flowing FSM
+![Circuit Breaker FSM visualization](examples/cbm.svg)
+
+
+Take a look at `examples` folder for details.
 
 ##### License
 Copyright 2018 Bohdan Storozhuk
