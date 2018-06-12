@@ -11,23 +11,23 @@ type CBMState int
 const (
 	_ CBMState = iota
 	Closed
+	Exit
 	HalfOpened
 	Opened
-	Terminal
 )
 
 var _CBMStateMap = map[CBMState]string{
 	Closed:     "Closed",
+	Exit:       "Exit",
 	HalfOpened: "HalfOpened",
 	Opened:     "Opened",
-	Terminal:   "Terminal",
 }
 
 var _CBMParsingStateMap = map[string]CBMState{
 	"Closed":     Closed,
+	"Exit":       Exit,
 	"HalfOpened": HalfOpened,
 	"Opened":     Opened,
-	"Terminal":   Terminal,
 }
 
 func (s CBMState) String() string {
@@ -36,6 +36,7 @@ func (s CBMState) String() string {
 
 type CBMBehaviour interface {
 	CBMClosedState
+
 	CBMHalfOpenedState
 	CBMOpenedState
 }
@@ -61,30 +62,28 @@ func (m *CBM) Current() CBMState {
 }
 
 func (m *CBM) Operate(operator CBMBehaviour) {
-	for {
-		switch m.state {
-		case Closed:
-			m.handleClosedEvent(operator.OperateClosed())
-		case HalfOpened:
-			m.handleHalfOpenedEvent(operator.OperateHalfOpened())
-		case Opened:
-			m.handleOpenedEvent(operator.OperateOpened())
-		case Terminal:
-			return
-		}
+	switch m.state {
+	case Closed:
+		m.handleClosedEvent(operator.OperateClosed())
+	case Exit:
+		return
+	case HalfOpened:
+		m.handleHalfOpenedEvent(operator.OperateHalfOpened())
+	case Opened:
+		m.handleOpenedEvent(operator.OperateOpened())
 	}
 }
 
 func (m *CBM) Visualize() string {
 	return `// Definition for CBM in Graphviz format 
 digraph CBM {
-	Closed -> Terminal [label=Error];
-	Closed -> Opened [label=Failure];
-	Closed -> Terminal [label=Panic];
+	Closed -> Opened [label=Error];
+	Closed -> Exit [label=Panic];
+	Exit [shape=Msquare];
 	HalfOpened -> Opened [label=Failure];
+	HalfOpened -> Exit [label=Panic];
 	HalfOpened -> Closed [label=Success];
 	Opened -> HalfOpened [label=Try];
-	Terminal [shape=Msquare];
 }
 `
 }
@@ -94,11 +93,9 @@ digraph CBM {
 func (m *CBM) handleClosedEvent(event CBMClosedEvent) {
 	switch event {
 	case ClosedError:
-		m.state = Terminal
-	case ClosedFailure:
 		m.state = Opened
 	case ClosedPanic:
-		m.state = Terminal
+		m.state = Exit
 	case ClosedNoop:
 	}
 }
@@ -107,6 +104,8 @@ func (m *CBM) handleHalfOpenedEvent(event CBMHalfOpenedEvent) {
 	switch event {
 	case HalfOpenedFailure:
 		m.state = Opened
+	case HalfOpenedPanic:
+		m.state = Exit
 	case HalfOpenedSuccess:
 		m.state = Closed
 	case HalfOpenedNoop:
@@ -130,16 +129,14 @@ type CBMClosedEvent int
 const (
 	_ CBMClosedEvent = iota
 	ClosedError
-	ClosedFailure
 	ClosedPanic
 	ClosedNoop
 )
 
 var _CBMClosedEventMap = map[CBMClosedEvent]string{
-	ClosedError:   "ClosedError",
-	ClosedFailure: "ClosedFailure",
-	ClosedPanic:   "ClosedPanic",
-	ClosedNoop:    "ClosedNoop",
+	ClosedError: "ClosedError",
+	ClosedPanic: "ClosedPanic",
+	ClosedNoop:  "ClosedNoop",
 }
 
 func (m CBMClosedEvent) String() string {
@@ -157,12 +154,14 @@ type CBMHalfOpenedEvent int
 const (
 	_ CBMHalfOpenedEvent = iota
 	HalfOpenedFailure
+	HalfOpenedPanic
 	HalfOpenedSuccess
 	HalfOpenedNoop
 )
 
 var _CBMHalfOpenedEventMap = map[CBMHalfOpenedEvent]string{
 	HalfOpenedFailure: "HalfOpenedFailure",
+	HalfOpenedPanic:   "HalfOpenedPanic",
 	HalfOpenedSuccess: "HalfOpenedSuccess",
 	HalfOpenedNoop:    "HalfOpenedNoop",
 }

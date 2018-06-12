@@ -202,10 +202,6 @@ func verifyDefinition(fset *token.FileSet, definition MachineDefinition) {
 }
 
 func verifyField(fset *token.FileSet, field *ast.Field) {
-	typeID, ok := field.Type.(*ast.Ident)
-	if !ok || typeID.Name != "FSMState" {
-		log.Fatalf("target field type unsupported %+v. %v", field.Type, fset.Position(field.Pos()))
-	}
 	if len(field.Names) != 1 {
 		log.Fatalf("target field names have unexpected len: %+v. %v", field.Names, fset.Position(field.Pos()))
 	}

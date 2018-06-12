@@ -1,13 +1,16 @@
 [<img src="https://travis-ci.org/storozhukBM/go-fsm-generator.svg?branch=master">](https://travis-ci.org/storozhukBM/go-fsm-generator)
 
-# Code generator for state machines
+# Finite state machine generation tool
 
-`fsmgenerator` can be used to generate code to state machine.
-Can be easily used with `go generate`.
+`go-fsm-generator` generates all states, events and behavioral interfaces for your state machine.
+
+- It will statically analyze you FSM definition and can point out some problems during generation.
+- Generated code designed to prevent impossible state transitions, so it is easy and safe to use.
+- Automatically detects terminal states.
+- Visualize your FSM in generation time and in runtime using Graphwiz notation [`dot`].
+- Created with `go generate` in mind.
 
 Use examples folder as reference.
-
-
 
 ##### License
 Copyright 2018 Bohdan Storozhuk

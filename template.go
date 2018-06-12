@@ -66,8 +66,7 @@ var embeddedTemplate = template.Must(template.New("embedded").Parse(`
 	}
 	
 	func (m *{{$mName}}) Operate(operator {{$mName}}Behaviour) {
-		for {
-			switch m.state {
+		switch m.state {
 			{{- range $st, $stDef := .States}}
 				{{- if ($stDef.IsTerminal)}}
 				case {{$st}}:
@@ -77,7 +76,6 @@ var embeddedTemplate = template.Must(template.New("embedded").Parse(`
 					m.handle{{$st}}Event(operator.Operate{{$st}}())
 				{{- end}}
 			{{- end}}
-		}
 		}
 	}
 
