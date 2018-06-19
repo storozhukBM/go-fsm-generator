@@ -1,38 +1,38 @@
 package main
 
 import (
+	"bytes"
 	"flag"
-	"strings"
-	"log"
+	"fmt"
+	"go/ast"
+	"go/format"
 	"go/parser"
 	"go/token"
-	"go/ast"
-	"bytes"
-	"path/filepath"
 	"io/ioutil"
-	"fmt"
-	"go/format"
+	"log"
+	"path/filepath"
 	"sort"
+	"strings"
 )
 
 const declarationTag = "Declaration"
 
-type Event string
-type State string
+type event string
+type state string
 
-type StateDefinition struct {
-	Name         State
-	Events       map[Event]State
-	Destinations map[State][]Event
+type stateDefinition struct {
+	Name         state
+	Events       map[event]state
+	Destinations map[state][]event
 	IsTerminal   bool
 	Field        *ast.Field
 }
 
-type MachineDefinition struct {
+type machineDefinition struct {
 	DirName     string
 	PkgName     string
 	MachineName string
-	States      map[State]StateDefinition
+	States      map[state]stateDefinition
 	Description string
 	Struct      *ast.StructType
 }
@@ -67,18 +67,18 @@ func main() {
 
 func generateStm(verbose bool, machineName string, dirName string, pkgName string, fset *token.FileSet, obj *ast.Object) {
 	structType := extractStructTypeFromDefinition(fset, obj)
-	states := map[State]StateDefinition{}
+	states := map[state]stateDefinition{}
 	for _, field := range structType.Fields.List {
 		verifyField(fset, field)
-		st := StateDefinition{
-			Name:       State(field.Names[0].Name),
+		st := stateDefinition{
+			Name:       state(field.Names[0].Name),
 			IsTerminal: field.Tag == nil || field.Tag.Value == "",
 			Field:      field,
 		}
 		st.Events, st.Destinations = parseStateMachineEventsAndDestinations(st, fset, field.Tag)
 		states[st.Name] = st
 	}
-	definition := MachineDefinition{
+	definition := machineDefinition{
 		DirName:     dirName,
 		PkgName:     pkgName,
 		MachineName: machineName,
@@ -93,7 +93,7 @@ func generateStm(verbose bool, machineName string, dirName string, pkgName strin
 	}
 }
 
-func generateFromTemplateAndWriteToFile(definition MachineDefinition) {
+func generateFromTemplateAndWriteToFile(definition machineDefinition) {
 	var b bytes.Buffer
 	err := embeddedTemplate.Execute(&b, definition)
 	if err != nil {
@@ -116,7 +116,7 @@ func generateFromTemplateAndWriteToFile(definition MachineDefinition) {
 	}
 }
 
-func describeGeneratedMachine(definition MachineDefinition) string {
+func describeGeneratedMachine(definition machineDefinition) string {
 	builder := &strings.Builder{}
 
 	builder.WriteString("`// Definition for ")
@@ -151,27 +151,27 @@ func describeGeneratedMachine(definition MachineDefinition) string {
 	return builder.String()
 }
 
-func parseStateMachineEventsAndDestinations(st StateDefinition, fset *token.FileSet, tag *ast.BasicLit) (map[Event]State, map[State][]Event) {
+func parseStateMachineEventsAndDestinations(st stateDefinition, fset *token.FileSet, tag *ast.BasicLit) (map[event]state, map[state][]event) {
 	if st.IsTerminal {
 		return nil, nil
 	}
-	events := map[Event]State{}
-	destinations := map[State][]Event{}
+	events := map[event]state{}
+	destinations := map[state][]event{}
 	eventsDeclarations := strings.Split(strip(tag.Value), ",")
 	for _, eventDeclaration := range eventsDeclarations {
 		eventStr := strings.Split(eventDeclaration, ":")
 		if len(eventStr) != 2 || len(eventStr[0]) < 1 || len(eventStr[0]) < 3 {
 			log.Fatalf("unsuported tag format %+v. %v", eventDeclaration, fset.Position(tag.Pos()))
 		}
-		ev := Event(eventStr[0])
-		dst := State(strip(eventStr[1]))
+		ev := event(eventStr[0])
+		dst := state(strip(eventStr[1]))
 
 		if ev == "Noop" {
 			log.Fatalf("event `Noop` is reserved by system %+v", fset.Position(tag.Pos()))
 		}
 
 		if _, ok := events[ev]; ok {
-			log.Fatalf("event `%s` duplicate on State `%s`. %v", ev, st.Name, fset.Position(tag.Pos()))
+			log.Fatalf("event `%s` duplicate on state `%s`. %v", ev, st.Name, fset.Position(tag.Pos()))
 		}
 		events[ev] = dst
 		destinations[dst] = append(destinations[dst], ev)
@@ -187,13 +187,13 @@ func verifySpecifiedTypes(types []string) {
 	}
 }
 
-func verifyDefinition(fset *token.FileSet, definition MachineDefinition) {
+func verifyDefinition(fset *token.FileSet, definition machineDefinition) {
 	for _, st := range definition.States {
 		for dst, events := range st.Destinations {
 			_, ok := definition.States[dst]
 			if !ok {
 				log.Fatalf(
-					"You've defined (%v) -%v-> (%v). But there is no such destination State as `%v`. %v",
+					"You've defined (%v) -%v-> (%v). But there is no such destination state as `%v`. %v",
 					st.Name, events, dst, dst, fset.Position(st.Field.Pos()),
 				)
 			}
@@ -247,8 +247,8 @@ func scan(
 	}
 }
 
-func sortedStates(m map[State]StateDefinition) []State {
-	var result []State
+func sortedStates(m map[state]stateDefinition) []state {
+	var result []state
 	for key := range m {
 		result = append(result, key)
 	}
@@ -258,8 +258,8 @@ func sortedStates(m map[State]StateDefinition) []State {
 	return result
 }
 
-func sortedEvents(m map[Event]State) []Event {
-	var result []Event
+func sortedEvents(m map[event]state) []event {
+	var result []event
 	for key := range m {
 		result = append(result, key)
 	}

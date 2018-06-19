@@ -7,8 +7,10 @@ import (
 
 //go:generate ../go-fsm-generator -type CBMDeclaration -v
 
+// State placeholder type
 type FSMState int
 
+// Declaration of the circuit breaker state machine
 type CBMDeclaration struct {
 	Opened     FSMState `Try:"HalfOpened"`
 	HalfOpened FSMState `Success:"Closed",Failure:"Opened",Panic:"Exit"`
@@ -16,6 +18,7 @@ type CBMDeclaration struct {
 	Exit       FSMState
 }
 
+// Circuit breaker type with state machine inside
 type CircuitBreaker struct {
 	fsm *CBM
 
@@ -29,6 +32,7 @@ type CircuitBreaker struct {
 	coolDownPeriod time.Duration
 }
 
+// Circuit breaker constructor
 func NewCircuitBreaker() *CircuitBreaker {
 	return &CircuitBreaker{
 		fsm:              NewCBM(Closed),
@@ -37,6 +41,7 @@ func NewCircuitBreaker() *CircuitBreaker {
 	}
 }
 
+// Execute protected func under circuit breaker
 func (m *CircuitBreaker) Run(protectedFunc func() error) error {
 	m.protectedFunc = protectedFunc
 	m.fsm.Operate(m)
@@ -46,6 +51,7 @@ func (m *CircuitBreaker) Run(protectedFunc func() error) error {
 	return m.lastErr
 }
 
+// Closed state behaviour
 func (m *CircuitBreaker) OperateClosed() (event CBMClosedEvent) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -64,6 +70,7 @@ func (m *CircuitBreaker) OperateClosed() (event CBMClosedEvent) {
 	return ClosedNoop
 }
 
+// HalfOpened state behaviour
 func (m *CircuitBreaker) OperateHalfOpened() (event CBMHalfOpenedEvent) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -82,6 +89,7 @@ func (m *CircuitBreaker) OperateHalfOpened() (event CBMHalfOpenedEvent) {
 	return HalfOpenedSuccess
 }
 
+// Opened state behaviour
 func (m *CircuitBreaker) OperateOpened() CBMOpenedEvent {
 	if time.Since(m.openedAt) > m.coolDownPeriod {
 		return OpenedTry

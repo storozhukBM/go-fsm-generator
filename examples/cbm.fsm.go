@@ -6,14 +6,15 @@ import "fmt"
 
 //+++ General machine definition +++
 
+// States of CBM
 type CBMState int
 
 const (
-	_ CBMState = iota
-	Closed
-	Exit
-	HalfOpened
-	Opened
+	_          CBMState = iota
+	Closed              // Closed state
+	Exit                // Exit state
+	HalfOpened          // HalfOpened state
+	Opened              // Opened state
 )
 
 var _CBMStateMap = map[CBMState]string{
@@ -34,6 +35,7 @@ func (s CBMState) String() string {
 	return _CBMStateMap[s]
 }
 
+// Behaviours of CBM machine
 type CBMBehaviour interface {
 	CBMClosedState
 
@@ -41,14 +43,17 @@ type CBMBehaviour interface {
 	CBMOpenedState
 }
 
+// CBM machine type
 type CBM struct {
 	state CBMState
 }
 
+// Factory for CBM machine
 func NewCBM(state CBMState) *CBM {
 	return &CBM{state: state}
 }
 
+// Use it to deserialize CBM machine state
 func NewCBMFromString(stateStr string) (*CBM, error) {
 	state, ok := _CBMParsingStateMap[stateStr]
 	if !ok {
@@ -57,10 +62,12 @@ func NewCBMFromString(stateStr string) (*CBM, error) {
 	return &CBM{state: state}, nil
 }
 
+// Get current state of CBM
 func (m *CBM) Current() CBMState {
 	return m.state
 }
 
+// Execute behaviour for the current state CBM
 func (m *CBM) Operate(operator CBMBehaviour) {
 	switch m.state {
 	case Closed:
@@ -74,6 +81,7 @@ func (m *CBM) Operate(operator CBMBehaviour) {
 	}
 }
 
+// Visualize states and events for CBM in Graphviz format
 func (m *CBM) Visualize() string {
 	return `// Definition for CBM in Graphviz format 
 digraph CBM {
@@ -124,13 +132,14 @@ func (m *CBM) handleOpenedEvent(event CBMOpenedEvent) {
 
 //=== CBMClosedEvent definition ===
 
+// CBMClosedEvent definition
 type CBMClosedEvent int
 
 const (
-	_ CBMClosedEvent = iota
-	ClosedError
-	ClosedPanic
-	ClosedNoop
+	_           CBMClosedEvent = iota
+	ClosedError                // ClosedError -> Opened
+	ClosedPanic                // ClosedPanic -> Exit
+	ClosedNoop                 // remain in Closed
 )
 
 var _CBMClosedEventMap = map[CBMClosedEvent]string{
@@ -143,20 +152,22 @@ func (m CBMClosedEvent) String() string {
 	return _CBMClosedEventMap[m]
 }
 
+// Closed behaviour
 type CBMClosedState interface {
 	OperateClosed() CBMClosedEvent
 }
 
 //=== CBMHalfOpenedEvent definition ===
 
+// CBMHalfOpenedEvent definition
 type CBMHalfOpenedEvent int
 
 const (
-	_ CBMHalfOpenedEvent = iota
-	HalfOpenedFailure
-	HalfOpenedPanic
-	HalfOpenedSuccess
-	HalfOpenedNoop
+	_                 CBMHalfOpenedEvent = iota
+	HalfOpenedFailure                    // HalfOpenedFailure -> Opened
+	HalfOpenedPanic                      // HalfOpenedPanic -> Exit
+	HalfOpenedSuccess                    // HalfOpenedSuccess -> Closed
+	HalfOpenedNoop                       // remain in HalfOpened
 )
 
 var _CBMHalfOpenedEventMap = map[CBMHalfOpenedEvent]string{
@@ -170,18 +181,20 @@ func (m CBMHalfOpenedEvent) String() string {
 	return _CBMHalfOpenedEventMap[m]
 }
 
+// HalfOpened behaviour
 type CBMHalfOpenedState interface {
 	OperateHalfOpened() CBMHalfOpenedEvent
 }
 
 //=== CBMOpenedEvent definition ===
 
+// CBMOpenedEvent definition
 type CBMOpenedEvent int
 
 const (
-	_ CBMOpenedEvent = iota
-	OpenedTry
-	OpenedNoop
+	_          CBMOpenedEvent = iota
+	OpenedTry                 // OpenedTry -> HalfOpened
+	OpenedNoop                // remain in Opened
 )
 
 var _CBMOpenedEventMap = map[CBMOpenedEvent]string{
@@ -193,6 +206,7 @@ func (m CBMOpenedEvent) String() string {
 	return _CBMOpenedEventMap[m]
 }
 
+// Opened behaviour
 type CBMOpenedState interface {
 	OperateOpened() CBMOpenedEvent
 }
