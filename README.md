@@ -1,4 +1,4 @@
-[<img src="https://travis-ci.org/storozhukBM/go-fsm-generator.svg?branch=master">](https://travis-ci.org/storozhukBM/go-fsm-generator)
+[<img src="https://travis-ci.org/storozhukBM/go-fsm-generator.svg?branch=master">](https://travis-ci.org/storozhukBM/go-fsm-generator) [![Go Report Card](https://goreportcard.com/badge/github.com/storozhukBM/go-fsm-generator)](https://goreportcard.com/report/github.com/storozhukBM/go-fsm-generator)
 
 # Finite state machine generation tool
 
