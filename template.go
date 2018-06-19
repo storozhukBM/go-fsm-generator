@@ -11,11 +11,12 @@ var embeddedTemplate = template.Must(template.New("embedded").Parse(`
 
 	//+++ General machine definition +++
 	{{$mName := .MachineName}}
+	// States of {{$mName}}
 	type {{$mName}}State int
 	const (
 		_ {{$mName}}State = iota
 		{{- range $st, $stDef := .States}}
-			{{$st}}
+			{{$st}} // {{$st}} state
 		{{- end}}
 	)
 
@@ -35,7 +36,7 @@ var embeddedTemplate = template.Must(template.New("embedded").Parse(`
 		return _{{$mName}}StateMap[s]
 	}
 
-	
+	// Behaviours of {{$mName}} machine
 	type {{$mName}}Behaviour interface {
 	{{- range $st, $stDef := .States}}
 		{{- if ($stDef.IsTerminal)}}
@@ -44,27 +45,32 @@ var embeddedTemplate = template.Must(template.New("embedded").Parse(`
 		{{- end}}
 	{{- end}}
 	}
-
+	
+	// {{$mName}} machine type
 	type {{$mName}} struct {
 		state {{$mName}}State
 	}
-
+	
+	// Factory for {{$mName}} machine
 	func New{{$mName}}(state {{$mName}}State) *{{$mName}} {
 		return &{{$mName}}{state: state}
 	}
 
+	// Use it to deserialize {{$mName}} machine state
 	func New{{$mName}}FromString(stateStr string) (*{{$mName}}, error) {
-	state, ok := _{{$mName}}ParsingStateMap[stateStr]
-	if !ok {
-		return nil, fmt.Errorf("state unknown for {{$mName}}: %s", stateStr)
+		state, ok := _{{$mName}}ParsingStateMap[stateStr]
+		if !ok {
+			return nil, fmt.Errorf("state unknown for {{$mName}}: %s", stateStr)
+		}
+		return &{{$mName}}{state: state}, nil
 	}
-	return &{{$mName}}{state: state}, nil
-}
 
+	// Get current state of {{$mName}}
 	func (m *{{$mName}}) Current() {{$mName}}State {
 		return m.state
 	}
 	
+	// Execute behaviour for the current state {{$mName}}
 	func (m *{{$mName}}) Operate(operator {{$mName}}Behaviour) {
 		switch m.state {
 			{{- range $st, $stDef := .States}}
@@ -79,6 +85,7 @@ var embeddedTemplate = template.Must(template.New("embedded").Parse(`
 		}
 	}
 
+	// Visualize states and events for {{$mName}} in Graphviz format
 	func (m *{{$mName}}) Visualize() string {
 		return {{.Description}}
 	}
@@ -104,14 +111,15 @@ var embeddedTemplate = template.Must(template.New("embedded").Parse(`
 		{{if ($stDef.IsTerminal)}}
 		{{else}}
 		//=== {{$mName}}{{$st}}Event definition ===
-
+		
+		// {{$mName}}{{$st}}Event definition
 		type {{$mName}}{{$st}}Event int
 		const (
 			_ {{$mName}}{{$st}}Event = iota
 			{{- range $ev, $dst := $stDef.Events}}
-				{{$st}}{{$ev}}
+				{{$st}}{{$ev}} // {{$st}}{{$ev}} -> {{$dst}}
 			{{- end}}
-			{{$st}}Noop
+			{{$st}}Noop // remain in {{$st}}
 		)
 
 		var _{{$mName}}{{$st}}EventMap = map[{{$mName}}{{$st}}Event]string{
@@ -124,7 +132,8 @@ var embeddedTemplate = template.Must(template.New("embedded").Parse(`
 		func (m {{$mName}}{{$st}}Event) String() string {
 			return _{{$mName}}{{$st}}EventMap[m]
 		}
-
+		
+		// {{$st}} behaviour
 		type {{$mName}}{{$st}}State interface {
 			Operate{{$st}}() {{$mName}}{{$st}}Event
 		}
