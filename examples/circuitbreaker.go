@@ -1,8 +1,8 @@
 package examples
 
 import (
-	"time"
 	"errors"
+	"time"
 )
 
 //go:generate ../go-fsm-generator -type CBMDeclaration -v

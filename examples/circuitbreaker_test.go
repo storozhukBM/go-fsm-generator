@@ -1,8 +1,8 @@
 package examples
 
 import (
-	"testing"
 	"errors"
+	"testing"
 	"time"
 )
 
