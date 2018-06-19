@@ -11,7 +11,7 @@ var embeddedTemplate = template.Must(template.New("embedded").Parse(`
 
 	//+++ General machine definition +++
 	{{$mName := .MachineName}}
-	// States of {{$mName}}
+	//  {{$mName}} states
 	type {{$mName}}State int
 	const (
 		_ {{$mName}}State = iota
@@ -36,7 +36,7 @@ var embeddedTemplate = template.Must(template.New("embedded").Parse(`
 		return _{{$mName}}StateMap[s]
 	}
 
-	// Behaviours of {{$mName}} machine
+	// {{$mName}} behaviours
 	type {{$mName}}Behaviour interface {
 	{{- range $st, $stDef := .States}}
 		{{- if ($stDef.IsTerminal)}}
@@ -51,12 +51,12 @@ var embeddedTemplate = template.Must(template.New("embedded").Parse(`
 		state {{$mName}}State
 	}
 	
-	// Factory for {{$mName}} machine
+	// {{$mName}} creates machine with specified initial state
 	func New{{$mName}}(state {{$mName}}State) *{{$mName}} {
 		return &{{$mName}}{state: state}
 	}
 
-	// Use it to deserialize {{$mName}} machine state
+	// {{$mName}} can be used to deserialize  machine state
 	func New{{$mName}}FromString(stateStr string) (*{{$mName}}, error) {
 		state, ok := _{{$mName}}ParsingStateMap[stateStr]
 		if !ok {
@@ -65,12 +65,12 @@ var embeddedTemplate = template.Must(template.New("embedded").Parse(`
 		return &{{$mName}}{state: state}, nil
 	}
 
-	// Get current state of {{$mName}}
+	// Current returns current state of {{$mName}}
 	func (m *{{$mName}}) Current() {{$mName}}State {
 		return m.state
 	}
 	
-	// Execute behaviour for the current state {{$mName}}
+	// Operate executes behaviour for the current state {{$mName}}
 	func (m *{{$mName}}) Operate(operator {{$mName}}Behaviour) {
 		switch m.state {
 			{{- range $st, $stDef := .States}}
@@ -133,7 +133,7 @@ var embeddedTemplate = template.Must(template.New("embedded").Parse(`
 			return _{{$mName}}{{$st}}EventMap[m]
 		}
 		
-		// {{$st}} behaviour
+		// {{$mName}}{{$st}}State behaviour
 		type {{$mName}}{{$st}}State interface {
 			Operate{{$st}}() {{$mName}}{{$st}}Event
 		}

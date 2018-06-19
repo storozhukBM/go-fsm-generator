@@ -6,7 +6,7 @@ import "fmt"
 
 //+++ General machine definition +++
 
-// States of CBM
+//  CBM states
 type CBMState int
 
 const (
@@ -35,7 +35,7 @@ func (s CBMState) String() string {
 	return _CBMStateMap[s]
 }
 
-// Behaviours of CBM machine
+// CBM behaviours
 type CBMBehaviour interface {
 	CBMClosedState
 
@@ -48,12 +48,12 @@ type CBM struct {
 	state CBMState
 }
 
-// Factory for CBM machine
+// CBM creates machine with specified initial state
 func NewCBM(state CBMState) *CBM {
 	return &CBM{state: state}
 }
 
-// Use it to deserialize CBM machine state
+// CBM can be used to deserialize  machine state
 func NewCBMFromString(stateStr string) (*CBM, error) {
 	state, ok := _CBMParsingStateMap[stateStr]
 	if !ok {
@@ -62,12 +62,12 @@ func NewCBMFromString(stateStr string) (*CBM, error) {
 	return &CBM{state: state}, nil
 }
 
-// Get current state of CBM
+// Current returns current state of CBM
 func (m *CBM) Current() CBMState {
 	return m.state
 }
 
-// Execute behaviour for the current state CBM
+// Operate executes behaviour for the current state CBM
 func (m *CBM) Operate(operator CBMBehaviour) {
 	switch m.state {
 	case Closed:
@@ -152,7 +152,7 @@ func (m CBMClosedEvent) String() string {
 	return _CBMClosedEventMap[m]
 }
 
-// Closed behaviour
+// CBMClosedState behaviour
 type CBMClosedState interface {
 	OperateClosed() CBMClosedEvent
 }
@@ -181,7 +181,7 @@ func (m CBMHalfOpenedEvent) String() string {
 	return _CBMHalfOpenedEventMap[m]
 }
 
-// HalfOpened behaviour
+// CBMHalfOpenedState behaviour
 type CBMHalfOpenedState interface {
 	OperateHalfOpened() CBMHalfOpenedEvent
 }
@@ -206,7 +206,7 @@ func (m CBMOpenedEvent) String() string {
 	return _CBMOpenedEventMap[m]
 }
 
-// Opened behaviour
+// CBMOpenedState behaviour
 type CBMOpenedState interface {
 	OperateOpened() CBMOpenedEvent
 }
