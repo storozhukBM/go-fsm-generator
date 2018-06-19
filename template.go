@@ -11,7 +11,7 @@ var embeddedTemplate = template.Must(template.New("embedded").Parse(`
 
 	//+++ General machine definition +++
 	{{$mName := .MachineName}}
-	//  {{$mName}} states
+	// {{$mName}}State type definition
 	type {{$mName}}State int
 	const (
 		_ {{$mName}}State = iota
@@ -36,7 +36,7 @@ var embeddedTemplate = template.Must(template.New("embedded").Parse(`
 		return _{{$mName}}StateMap[s]
 	}
 
-	// {{$mName}} behaviours
+	// {{$mName}}Behaviour definition
 	type {{$mName}}Behaviour interface {
 	{{- range $st, $stDef := .States}}
 		{{- if ($stDef.IsTerminal)}}
@@ -51,12 +51,12 @@ var embeddedTemplate = template.Must(template.New("embedded").Parse(`
 		state {{$mName}}State
 	}
 	
-	// {{$mName}} creates machine with specified initial state
+	// New{{$mName}} creates machine with specified initial state
 	func New{{$mName}}(state {{$mName}}State) *{{$mName}} {
 		return &{{$mName}}{state: state}
 	}
 
-	// {{$mName}} can be used to deserialize  machine state
+	// New{{$mName}}FromString can be used to deserialize  machine state
 	func New{{$mName}}FromString(stateStr string) (*{{$mName}}, error) {
 		state, ok := _{{$mName}}ParsingStateMap[stateStr]
 		if !ok {

@@ -6,7 +6,7 @@ import "fmt"
 
 //+++ General machine definition +++
 
-//  CBM states
+// CBMState type definition
 type CBMState int
 
 const (
@@ -35,7 +35,7 @@ func (s CBMState) String() string {
 	return _CBMStateMap[s]
 }
 
-// CBM behaviours
+// CBMBehaviour definition
 type CBMBehaviour interface {
 	CBMClosedState
 
@@ -48,12 +48,12 @@ type CBM struct {
 	state CBMState
 }
 
-// CBM creates machine with specified initial state
+// NewCBM creates machine with specified initial state
 func NewCBM(state CBMState) *CBM {
 	return &CBM{state: state}
 }
 
-// CBM can be used to deserialize  machine state
+// NewCBMFromString can be used to deserialize  machine state
 func NewCBMFromString(stateStr string) (*CBM, error) {
 	state, ok := _CBMParsingStateMap[stateStr]
 	if !ok {
