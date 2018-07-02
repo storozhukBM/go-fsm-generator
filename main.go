@@ -2,9 +2,10 @@ package main
 
 import (
 	"flag"
-	"github.com/storozhukBM/go-fsm-generator/generator"
 	"log"
 	"strings"
+
+	"github.com/storozhukBM/go-fsm-generator/generator"
 )
 
 func main() {
