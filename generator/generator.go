@@ -1,17 +1,17 @@
 package generator
 
 import (
-	"go/ast"
-	"strings"
-	"log"
-	"go/token"
-	"go/parser"
-	"sort"
 	"bytes"
-	"go/format"
-	"path/filepath"
-	"io/ioutil"
 	"fmt"
+	"go/ast"
+	"go/format"
+	"go/parser"
+	"go/token"
+	"io/ioutil"
+	"log"
+	"path/filepath"
+	"sort"
+	"strings"
 )
 
 const declarationTag = "Declaration"
@@ -62,8 +62,6 @@ func verifySpecifiedTypes(types []string) error {
 	}
 	return nil
 }
-
-
 
 func generateStm(verbose bool, machineName string, dirName string, pkgName string, fset *token.FileSet, obj *ast.Object) {
 	structType := extractStructTypeFromDefinition(fset, obj)
@@ -179,8 +177,6 @@ func parseStateMachineEventsAndDestinations(st stateDefinition, fset *token.File
 	return events, destinations
 }
 
-
-
 func verifyDefinition(fset *token.FileSet, definition machineDefinition) {
 	for _, st := range definition.States {
 		for dst, events := range st.Destinations {
@@ -244,7 +240,6 @@ func sortedEvents(m map[event]state) []event {
 	})
 	return result
 }
-
 
 func scan(
 	packages map[string]*ast.Package,

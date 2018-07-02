@@ -1,11 +1,11 @@
 package generator
 
 import (
-	"testing"
-	"os"
-	"io/ioutil"
 	"bytes"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"testing"
 )
 
 func TestRunGeneratorForTypes(t *testing.T) {
