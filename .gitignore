@@ -1,1 +1,3 @@
 go-fsm-generator
+
+generator/testdata/some.fsm.go
